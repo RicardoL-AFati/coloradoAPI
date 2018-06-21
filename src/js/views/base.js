@@ -1,3 +1,4 @@
+// Object with Dom elements
 export const elements = {
   demDropdown: document.querySelector('[name="filter"]'),
   filterForm: document.getElementById('filters'),
@@ -6,4 +7,7 @@ export const elements = {
   filterList: document.querySelector('ul.addedFilters'),
   rangeInputs: [...document.querySelectorAll('input[type="number"]')],
   statsList: document.getElementById('statsList'),
+  saveLocal: document.getElementById('saveStats'),
+  removeLocal: document.getElementById('removeStats'),
+  clearPastSearch: document.getElementById('clearPastSearch'),
 };

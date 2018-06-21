@@ -1,121 +1,81 @@
+// Importing Search Model, search view, and UI dom element selectors
 import Search from './models/Search';
 import SearchView from './views/searchView';
 import { elements } from './views/base';
-import { debug } from 'util';
-
+// Creating an instance of searchView and declaring variables
 const searchView = new SearchView();
 const state = {};
-let checked = false;
-let filterUIList = {};
 let statsList = [];
-elements.demDropdown.addEventListener('change', () => searchView.makeOptions());
-elements.filterForm.addEventListener('submit', makeSearch);
-elements.filterBtns.forEach(btn => btn.addEventListener('click', configFilter));
-elements.filterList.addEventListener('click', removeFilter);
-
+// Adding event listeners and retrieving from filters and data from local storage (if present)
+function init() {
+  elements.demDropdown.addEventListener('change', () => searchView.makeOptions());
+  elements.filterForm.addEventListener('submit', makeSearch);
+  elements.filterBtns.forEach(btn => btn.addEventListener('click', configFilter));
+  elements.filterList.addEventListener('click', (e) => searchView.removeFilter(e));
+  elements.saveLocal.addEventListener('click', saveToLocal);
+  elements.removeLocal.addEventListener('click', () => localStorage.clear());
+  elements.clearPastSearch.addEventListener('click', clearPastSearch);
+  elements.filterList.innerHTML = localStorage.getItem('filters') || '';
+  elements.statsList.innerHTML = localStorage.getItem('stats') || '';
+}
+// Creates two properties on localStorage and set to html of lists
+function saveToLocal() {
+  localStorage.setItem('filters', elements.filterList.innerHTML);
+  localStorage.setItem('stats', elements.statsList.innerHTML);
+}
+// Empties statistics and calls searchView to clear UI
+function clearPastSearch() {
+  statsList = [];
+  searchView.clearLists();
+}
+// Calls different searchView function based on button clicked on form
 function configFilter(e) {
-  const clickedBtn = e.target.id;  
-  if (clickedBtn === 'selectAll') {
+  if (e.target.id === 'selectAll') {
     searchView.toggleCheckBoxes();
-  } else if (clickedBtn === 'addFilter') {
-    addFilter();
-  } else if (clickedBtn === 'addRange') {
-    addYearRange();
-  } else if (clickedBtn === 'removeRange') {
-    removeYearRange();
+  } else if (e.target.id === 'addFilter') {
+    // Adds to filterList if not already present, and render list on UI
+    searchView.addFilter();
+  // Year is added or removed from filter list, UI is re-rendered  
+  } else if (e.target.id === 'addRange') {
+    searchView.addYearRange();
+  } else if (e.target.id === 'removeRange') {
+    searchView.removeYearRange();
   }
 }
-
-
-
-
-
-
-
-
-function removeFilter(e) {
-  if (e.target.matches('li')) {
-    if (e.target.classList.contains('filter')) {
-      delete filterUIList[e.target.textContent];
-    } else {
-      const optionIndex = filterUIList[e.target.dataset.filter]
-        .indexOf(e.target.textContent);
-      filterUIList[e.target.dataset.filter].splice(optionIndex, 1);
-      if (filterUIList[e.target.dataset.filter].length <= 0) {
-        delete filterUIList[e.target.dataset.filter];
-      }
-    }
-  }
-  updateList();
-}
-
-function removeYearRange() {
-  delete filterUIList['Year(s)'];
-  updateList();
-}
-
-
-function makeQuery() {
-  let query = '';
-  const filtersAndOptions = Object.entries(filterUIList);
-  filtersAndOptions.forEach((pair, index) => {
-    const filter = searchView.getFilter(pair[0]);
-    if (filter === 'year') {
-      query += makeYearQuery(pair);
-    } else if (pair[1].length !== searchView.getOptions(filter).length) {
-      if (pair[1].length === 1) {
-        query += `${filter} = '${pair[1]}' `;
-      } else {
-        query += pair[1].reduce((string, option, index, options) => string += 
-          `${filter} = '${option}'${index === options.length - 1 ? ') ' : ' OR '}`, '(');
-      }
-      query += (index === filtersAndOptions.length - 1) ? '' : 'AND '; 
-    } 
-  });
-  return query;
-}
-
-function makeYearQuery(yearPair) {
-  return (yearPair[1].length === 1) ? `year = ${yearPair[1]}` :
-    `(year between '${yearPair[1][0]--}' and '${yearPair[1][1]++}')`;
-}
-
-function makeSearch(e) {   
+// Queries the Socrata API - using generated query string from filters - for each of the data points
+function makeSearch(e) { 
   e.preventDefault();
   const dataPoints = ['sumstateaid', 'sumfederalpell', 'sumfederalloans', 'sumotherfederal', 'sumfederalplus', 'sumotherloans', 'sumotherscholarships'];
-  const filterQuery = makeQuery();
-  dataPoints.forEach(dataPoint => {
+  const filterQuery = searchView.makeQuery();
+  // Different API query for each dataPoint. Retrieves average and max value for the filtered population (if there are filters)
+  dataPoints.forEach((dataPoint) => {
     let fullQuery = `avg(${dataPoint}), max(${dataPoint}) `
     if (filterQuery) {
       fullQuery += `WHERE ${filterQuery} `;  
     }
+    // Creates a new Search instance on the state. With property name = dataPoint
     state[dataPoint] = new Search(fullQuery);
+    // Calling async function to run search
     runSearch(dataPoint);
   });
 }
-
+// Waits for API call then pushes onto statsList 
 async function runSearch(dataPoint) {
+  // Fetching for data using newly created Search instace
   await state[dataPoint].searchForStudents();
+  // Average and max data are stored on Search instance [result] - pushed onto statsList
   statsList.push(state[dataPoint].result);
+  // If statsList has 7 Search instances - all data has been gathered
   if (statsList.length === 7) getStats();  
 }
+// Generating HTML for average and max of each dataPoint 
 function getStats() {
   let listHTML = '';
+  // Data pair is stored as obj. Each obj has two key value pairs - avg: num, max: num
   statsList.forEach(stat => 
     Object.entries(stat[0])
-    .forEach(dataPair => listHTML+= makeStatsList(dataPair)));
+    .forEach(dataPair => listHTML += searchView.makeStatsList(dataPair)));
   elements.statsList.innerHTML = listHTML;
 }
-
-function makeStatsList(dataPair) {
-  let listHTML = '';
-  if (dataPair[0].includes('avg')) {
-    const title = searchView.getStatTitle(dataPair[0]);
-    listHTML += `<li class='filter'>${title}</li>
-    <li>Average: ${parseInt(dataPair[1]).toLocaleString()}</li>`;
-  } else {
-    listHTML += `<li>Max: ${parseInt(dataPair[1]).toLocaleString()}</li>`;
-  }
-  return listHTML;
-}
-
+// Initialization function - on page load
+init();
