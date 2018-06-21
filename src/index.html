@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,600,700" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <title>Colorado API - Ricardo Ledesma</title>
+</head>
+
+<body>
+<div class="container">
+    <div class="logo">
+        <p>dsasdasdasdsadsad</p>
+        <img src="img/logo.png" alt="Logo">
+    </div>
+    <div class="form">
+        <form id="filters">
+            <h3>Filter your search</h3>
+            <select name="filter">
+                <option value=''>Select A Demographic</option>  
+                <option value="Age Range">Age Range</option>
+                <option value="Enrollment Status">Enrollment Status</option>
+                <option value="Ethnicity">Ethnicity</option>
+                <option value="Gender">Gender</option>                
+                <option value="Institution Type">Institution Type</option>                
+                <option value="Institution Name">Institution Name</option>                
+                <option value="Residency">Residency</option>                
+                <option value="Student Level">Student Level</option>                              
+            </select>
+            <ul id="filterOptions" class="filterOptions"></ul>
+            <button type='button' id='selectAll' class="filterOptions">(un)Check All</button>
+            <button type='button' id='addFilter' class="filterOptions">Add Filter</button>
+            <h3>Enter A Range: Within 2004-2016 <span class="rangeSpan">(or leave blank)</span></h3>
+            <input type="number" placeholder="from">
+            <input type="number" placeholder="to">
+            <br>
+            <button type="button" id="addRange" class="range">Add Range</button>
+            <button type="button" id="removeRange" class="range">Remove Range</button>
+            <br>
+            <button type="submit" class="submitSearch">Search</button>    
+        </form>
+    </div>
+    <div class="controls"></div>
+    <div class="addedFilters"><ul class="addedFilters"></ul></div>
+    <div class="stats">
+      <img class="colorado" src="https://source.unsplash.com/Spdu7YT1O00/250x300">
+      <ul id="statsList"></ul>
+    </div>
+    <div class="savedStats"></div>
+</div>
+</body>
+
+</html>
