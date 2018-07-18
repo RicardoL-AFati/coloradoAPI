@@ -6,7 +6,7 @@ export default class Search {
   constructor(query) {
     this.query = query;
     this.endpoint = 'https://data.colorado.gov/resource/6pd5-jdur.json?';
-    this.appToken = '$$app_token=qlafHdIIyB5VrY2RvdpmlJ53K';
+    this.appToken = '$$app_token=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
     this.select = '&$query=SELECT ';
     this.limit = 'LIMIT 10000';
   }
